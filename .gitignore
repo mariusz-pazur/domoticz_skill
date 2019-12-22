@@ -7,3 +7,4 @@ htmlcov
 /.coverage
 /.coveralls.yml
 /coverage.json
+settings.json

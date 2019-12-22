@@ -12,6 +12,7 @@ class Domoticz:
     """Class for controlling Domoticz."""
     def __init__(self, host, port, protocol, authentication, login, password):
         """Recover settings for accessing to Domoticz instance."""
+        LOGGER.info("domoticz init")
         self.host = host
         self.port = port
         protocol = protocol
@@ -28,6 +29,7 @@ class Domoticz:
             self.url = self.protocol + "://" + self.host + ":" + self.port
 
     def findid(self, what, where, state):
+        LOGGER.info("called findid")
         i = 0
         wht = re.compile(what, re.I)
         whr = re.compile(where, re.I)
@@ -37,8 +39,10 @@ class Domoticz:
         idx = False
         stype = False
         dlevel = False
+        """self.log.info(payload['result'][i]['Name'])"""
         while i < len(payload['result']):
             if whr.search(payload['result'][i]['Name']) and wht.search(payload['result'][i]['Name']):
+                LOGGER.info(payload['result'][i]['Name'])
                 stype = payload['result'][i]['Type']
                 typ = re.compile(stype, re.I)
                 dlevel = "100"
@@ -103,6 +107,7 @@ class Domoticz:
 
     def switch(self, state, what, where, action):
         """Switch the device in Domoticz."""
+        LOGGER.info("called switch")
         data = []
         data = self.findid(what, where, state)
         idx = data[0]
@@ -115,6 +120,7 @@ class Domoticz:
                 try:
                     f = urllib.request.urlopen(self.url + "/json.htm?type=command&param=switch" + stype + "&idx=" + str(idx) + "&switchcmd=" + str(cmd))
                     response = f.read()
+                    LOGGER.info(str(response))
                     LOGGER.debug(str(response))
                     return response
                 except IOError as e:
