@@ -33,6 +33,8 @@ with other skills.  For instance naming a device "weather" could cause Mycroft t
 current stat for the device named "weather" if you ask "what's the weather" rather than telling
 you what the current weather is via the weather skill.
 
+If you add or change the name for a device or scene in Domoticz, then you must reload mycroft
+to pick up the new names.
 
 Domoticz Groups and Scenes
 -----
@@ -58,18 +60,45 @@ Usage
 
 In English :
 
-examples device names:
+Examples of Domoticz device names:
 
--  Living room light
--  Outside temperature
--  Front door lock
+-  outside temperature
+-  outside light
+-  front door lock
+-  mantle
+-  reading
+-  one
+-  two
+-  bedroom
+-  kitchen light one
+-  kitchen light two
+
+Examples Domoticz scene or group names:
+
+-  movie
+-  romantic
+-  living room  
+-  everything
+-  bed time
+
+Domoticz scenes: contain a mix devices that can be "on" OR "off".  Scenes have a single button to set the scene.
+Domoticz groups: contain devices that toggle on/off together as a group.  Groups have two buttons: on and off.
+
 
 example phrases:
 
--  Hey Mycroft turn on the living room light
+-  Hey Mycroft turn on the living room lights
+-  Hey Mycroft turn on bedroom light
+-  Hey Mycroft turn on movie lighting 
 -  Hey Mycroft what is the outside temperature?
 -  Hey Mycroft lock the front door
--  Hey Mycroft dim the dining room dimmer 50%
+-  Hey Mycroft dim the dining room lights by 50%
+-  Hey Mycroft set dining room light to 75%
+-  Hey Mycroft set the mantle light to red
+
+NOTES:
+-  dimmer values have only 20 steps to choose from counting by 5.  e.g. 5% 10% 15%...  Use "set" to jump. "dim" or "brighten" to increase/decrease from current level.
+-  color names are in english only. There are 170 colors to choose from and their names can be found in colors.cfg or vocab/en-us/ColorKeyword.voc 
 
 In French (not yet tested) :
 
@@ -80,7 +109,9 @@ In French (not yet tested) :
 Todo
 ----
 
-Use with Tasker on Android for send command voice to Mycroft.
+-  Use with Tasker on Android for send command voice to Mycroft.
+-  Color names need a translator
+
 
 .. _Python3: https://www.python.org/downloads/
 .. _Mycroft: https://mycroft.ai/
