@@ -18,12 +18,13 @@
 from adapt.intent import IntentBuilder
 from mycroft.skills.core import MycroftSkill
 from mycroft.util.log import getLogger
-from os.path import dirname, abspath
+from os.path import dirname, abspath, join
 import sys
 import re
 import urllib
 import urllib.request
 import json
+import configparser
 
 __author__ = 'mTreussart'
 
@@ -50,6 +51,15 @@ class DomoticzSkill(MycroftSkill):
             .require("DynamicWhereKeyword").build()
         self.register_intent(domoticz_switch_intent,
                              self.handle_domoticz_switch_intent)
+
+        # e.g. set the mantle lights to red
+        domoticz_color_intent = IntentBuilder("ColorIntent")\
+            .optionally("TurnKeyword")\
+            .optionally("WhatKeyword")\
+            .require("DynamicWhereKeyword")\
+            .require("ColorKeyword").build()
+        self.register_intent(domoticz_color_intent,
+                             self.handle_domoticz_color_intent)
 
         domoticz_infos_intent = IntentBuilder("InfosIntent")\
             .require("InfosKeyword")\
@@ -87,7 +97,6 @@ class DomoticzSkill(MycroftSkill):
         }
 
         LOGGER.debug("message : " + str(message.data))
-        #LOGGER.info("message : " + str(message.data))
         response = domoticz.switch(state, what, where, action)
         edng = re.compile(str(state).title(), re.I)
         ending = "ed"
@@ -129,6 +138,41 @@ class DomoticzSkill(MycroftSkill):
         LOGGER.debug("result : " + str(data))
         self.speak(str(data))
 
+    def handle_domoticz_color_intent(self, message):
+        domoticz = Domoticz(
+            self.settings.get("hostname"),
+            self.settings.get("port"),
+            self.settings.get("protocol"),
+            self.settings.get("authentication"),
+            self.settings.get("username"),
+            self.settings.get("password"))
+        what = message.data.get("WhatKeyword")
+        if what is None:
+            what = "lights"
+        where = message.data.get("DynamicWhereKeyword")
+        color = message.data.get("ColorKeyword")
+        data = {
+            'what': what,
+            'where': where
+        }
+        LOGGER.debug("message : " + str(message.data))
+        LOGGER.debug("what where color : " + str(what) + " " + str(where) + " " + str(color))
+        data = []
+        data = domoticz.findid(what, where, None)
+        idx = data[0]
+        result = data[1]
+        stype = data[2]
+        dlevel = data[3]
+        subtype = data[4]
+        switchtype = data[5]
+        if result is None:
+            self.speak_dialog("NotFound", data)
+        elif subtype == "RGB":
+            rgb = domoticz.convert_color_to_rgb(color)
+            domoticz.set_color(rgb, idx)
+        else:
+            self.speak("The " + str(where) + " " + str(what) + " is not a color light")
+
     def stop(self):
         pass
 
@@ -137,7 +181,6 @@ class Domoticz:
     """Class for controlling Domoticz."""
     def __init__(self, host, port, protocol, authentication, login, password):
         """Recover settings for accessing to Domoticz instance."""
-        #LOGGER.info("domoticz init")
         self.host = host
         self.port = port
         protocol = protocol
@@ -154,7 +197,6 @@ class Domoticz:
             self.url = self.protocol + "://" + self.host + ":" + self.port
 
     def get_where_names(self):
-        #LOGGER.info("get_where_names")
         # create array of names for scenes and devices stored in domoticz
         f_scenes = urllib.request.urlopen(self.url + "/json.htm?type=scenes&filter=all&used=true")
         response_scenes = f_scenes.read()
@@ -162,28 +204,25 @@ class Domoticz:
         f_devices = urllib.request.urlopen(self.url + "/json.htm?type=devices&filter=all&used=true")
         response_devices = f_devices.read()
         payload_devices = json.loads(response_devices.decode('utf-8'))
-        #LOGGER.info(payload_devices)
         result_array = []
         x = 0
         while x < len(payload_scenes['result']):
-            #LOGGER.info(payload_scenes['result'][x]['Name'])
             result_array.append(payload_scenes['result'][x]['Name'])
             x += 1
         x = 0
         while x < len(payload_devices['result']):
-            #LOGGER.info(payload_devices['result'][x]['Name'])
             result_array.append(payload_devices['result'][x]['Name'])
             x += 1
-        #LOGGER.info(result_array)
         return result_array
 
 
     def findid(self, what, where, state):
-        #LOGGER.info("called findid")
         wht = re.compile(what, re.I)
         whr = re.compile(where, re.I)
         idx = False
         stype = False
+        subtype = False
+        switchtype = False
         dlevel = False
         result = None
         for rq in [ "devices", "scenes" ]:
@@ -196,11 +235,8 @@ class Domoticz:
                 f = urllib.request.urlopen(self.url + "/json.htm?type=devices&filter=all&used=true")
             response = f.read()
             payload = json.loads(response.decode('utf-8'))
-            #LOGGER.info(len(payload['result']))
             while i < len(payload['result']):
-                #if whr.search(payload['result'][i]['Name']) and wht.search(payload['result'][i]['Name']):
                 if whr.search(payload['result'][i]['Name']):
-                    #LOGGER.info(payload['result'][i])
                     stype = payload['result'][i]['Type']
                     typ = re.compile(stype, re.I)
                     dlevel = "100"
@@ -209,6 +245,13 @@ class Domoticz:
                     elif typ.search("Light/Switch"):
                         stype = "light"
                         dlevel = payload['result'][i]['Level']
+                        subtype = payload['result'][i]['SubType']
+                        switchtype = payload['result'][i]['SwitchType']
+                    elif typ.search("Color Switch"):
+                        stype = "light"
+                        dlevel = payload['result'][i]['Level']
+                        subtype = payload['result'][i]['SubType']
+                        switchtype = payload['result'][i]['SwitchType']
                     else:
                         stype = "light"
                     idx = payload['result'][i]['idx']
@@ -221,11 +264,7 @@ class Domoticz:
                 elif i is len(payload['result']) - 1:
                     break
                 i += 1
-        #LOGGER.info(idx)
-        #LOGGER.info(result)
-        #LOGGER.info(stype)
-        #LOGGER.info(dlevel)
-        return [idx, result, stype, dlevel]
+        return [idx, result, stype, dlevel, subtype, switchtype]
 
     def findcmd(self, state, action, dlevel):
         dsrdst = str(state).title()
@@ -253,7 +292,7 @@ class Domoticz:
                 stlvl = 100
             cmd = "Set%20Level&level=" + str(stlvl)
         elif rslt2.search('set'):
-            stlvl = int(cmd)
+            stlvl = int(dsrdst)
             if stlvl > 100:
                 stlvl = 100
             elif stlvl < 0:
@@ -266,22 +305,36 @@ class Domoticz:
                 cmd = "Off"
         return cmd
 
+    def convert_color_to_rgb(self, color):
+        colors_name = "colors.cfg"
+        #colors_file = os.path.join(os.path.dirname(__file__), colors_name)
+        colors_file = join(dirname(__file__), colors_name)
+        self.colors = configparser.ConfigParser()
+        self.colors.read(colors_file)
+        if color is None:
+            return "fff4e5"
+        else:
+            for (key, val) in self.colors.items("colors"):
+                if color.lower().strip() == key.lower().strip():
+                    return val
+        return "fff4e5"
+
     def switch(self, state, what, where, action):
         """Switch the device in Domoticz."""
-        #LOGGER.info("called switch")
         data = []
         data = self.findid(what, where, state)
         idx = data[0]
         result = data[1]
         stype = data[2]
         dlevel = data[3]
+        subtype = data[4]
+        switchtype = data[5]
         if result is 1:
             cmd = self.findcmd(state, action, dlevel)
             if cmd:
                 try:
                     f = urllib.request.urlopen(self.url + "/json.htm?type=command&param=switch" + stype + "&idx=" + str(idx) + "&switchcmd=" + str(cmd))
                     response = f.read()
-                    #LOGGER.info(str(response))
                     LOGGER.debug(str(response))
                     return response
                 except IOError as e:
@@ -319,6 +372,31 @@ class Domoticz:
         except IOError as e:
             LOGGER.error(str(e) + ' : ' + str(e.read()))
 
+    def set_color(self, rgb, idx):
+        """Set the RGB colors in Domoticz."""
+        try:
+            with urllib.request.urlopen(self.url + "/json.htm?type=command&param=setcolbrightnessvalue&idx=" + str(idx) + "&hex=" + str(rgb) + "&brightness=100&iswhite=false") as url:
+                response = url.read()
+            LOGGER.debug(str(response))
+            return response
+        except IOError as e:
+            if hasattr(e, 'read'):
+                LOGGER.error(str(e) + ' : ' + str(e.read()))
+            else:
+                LOGGER.error(str(e))
+
+    def setlevel(self, level, idx):
+        """Set brightness level in Domoticz."""
+        try:
+            with urllib.request.urlopen(self.url + "/json.htm?type=command&param=switchlight&idx=" + str(idx) + "&switchcmd=Set%20Level&level=" + str(level)) as url:
+                response = url.read()
+            LOGGER.debug(str(response))
+            return response
+        except IOError as e:
+            if hasattr(e, 'read'):
+                LOGGER.error(str(e) + ' : ' + str(e.read()))
+            else:
+                LOGGER.error(str(e))
 
 def create_skill():
     return DomoticzSkill()
