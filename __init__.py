@@ -354,7 +354,7 @@ class Domoticz:
             if where is not None:
                 whr = re.compile(where, re.I)
                 while i < len(payload['result']):
-                    if whr.search(payload['result'][i]['Name']) and wht.search(payload['result'][i]['Name']):
+                    if whr.search(payload['result'][i]['Name']) and whr.search(payload['result'][i]['Name']):
                         break
                     elif i is len(payload['result']) - 1:
                         payload['result'][i]['Data'] = None
