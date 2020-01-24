@@ -198,22 +198,28 @@ class Domoticz:
 
     def get_where_names(self):
         # create array of names for scenes and devices stored in domoticz
-        f_scenes = urllib.request.urlopen(self.url + "/json.htm?type=scenes&filter=all&used=true")
-        response_scenes = f_scenes.read()
-        payload_scenes = json.loads(response_scenes.decode('utf-8'))
-        f_devices = urllib.request.urlopen(self.url + "/json.htm?type=devices&filter=all&used=true")
-        response_devices = f_devices.read()
-        payload_devices = json.loads(response_devices.decode('utf-8'))
-        result_array = []
-        x = 0
-        while x < len(payload_scenes['result']):
-            result_array.append(payload_scenes['result'][x]['Name'])
-            x += 1
-        x = 0
-        while x < len(payload_devices['result']):
-            result_array.append(payload_devices['result'][x]['Name'])
-            x += 1
-        return result_array
+        try:
+            f_scenes = urllib.request.urlopen(self.url + "/json.htm?type=scenes&filter=all&used=true")
+            response_scenes = f_scenes.read()
+            payload_scenes = json.loads(response_scenes.decode('utf-8'))
+            f_devices = urllib.request.urlopen(self.url + "/json.htm?type=devices&filter=all&used=true")
+            response_devices = f_devices.read()
+            payload_devices = json.loads(response_devices.decode('utf-8'))
+            result_array = []
+            x = 0
+            while x < len(payload_scenes['result']):
+                result_array.append(payload_scenes['result'][x]['Name'])
+                x += 1
+            x = 0
+            while x < len(payload_devices['result']):
+                result_array.append(payload_devices['result'][x]['Name'])
+                x += 1
+            return result_array
+        except IOError as e:
+            LOGGER.error(str(e) + ' : ' + str(e.read()))
+            return None
+
+
 
 
     def findid(self, what, where, state):

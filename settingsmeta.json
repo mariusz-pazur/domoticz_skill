@@ -24,7 +24,7 @@
                         "name": "port",
                         "type": "text",
                         "label": "Port",
-                        "value": "80"
+                        "value": "8080"
                     }
                 ]
             },
