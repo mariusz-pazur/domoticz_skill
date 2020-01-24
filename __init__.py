@@ -234,13 +234,16 @@ class Domoticz:
         for rq in [ "devices", "scenes" ]:
             i = 0
             result_search = "Data"
-            if rq == "scenes":
-                f = urllib.request.urlopen(self.url + "/json.htm?type=scenes&filter=all&used=true")
-                result_search = "Status"
-            else:
-                f = urllib.request.urlopen(self.url + "/json.htm?type=devices&filter=all&used=true")
-            response = f.read()
-            payload = json.loads(response.decode('utf-8'))
+            try:
+                if rq == "scenes":
+                    f = urllib.request.urlopen(self.url + "/json.htm?type=scenes&filter=all&used=true")
+                    result_search = "Status"
+                else:
+                    f = urllib.request.urlopen(self.url + "/json.htm?type=devices&filter=all&used=true")
+                response = f.read()
+                payload = json.loads(response.decode('utf-8'))
+            except IOError as e:
+                LOGGER.error(str(e) + ' : ' + str(e.read()))
             while i < len(payload['result']):
                 if whr.search(payload['result'][i]['Name']):
                     stype = payload['result'][i]['Type']
