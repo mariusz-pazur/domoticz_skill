@@ -217,7 +217,8 @@ class Domoticz:
                 x += 1
             return result_array
         except IOError as e:
-            LOGGER.error(str(e) + ' : ' + str(e.read()))
+            LOGGER.error(str(e))
+            #LOGGER.error(str(e) + ' : ' + str(e.read()))
             return None
 
 
