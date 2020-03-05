@@ -42,6 +42,7 @@ class DomoticzSkill(MycroftSkill):
         where_keywords = self.where_intent()
         i = 0
         while i < len(where_keywords):
+            LOGGER.debug("where_keyword : " + where_keywords[i])
             self.register_vocabulary(where_keywords[i], "DynamicWhereKeyword")
             i += 1
         domoticz_switch_intent = IntentBuilder("SwitchIntent")\
