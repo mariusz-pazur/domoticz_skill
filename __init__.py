@@ -208,11 +208,11 @@ class Domoticz:
             result_array = []
             x = 0
             while x < len(payload_scenes['result']):
-                result_array.append(payload_scenes['result'][x]['Name'])
+                result_array.append(payload_scenes['result'][x]['Description'])
                 x += 1
             x = 0
             while x < len(payload_devices['result']):
-                result_array.append(payload_devices['result'][x]['Name'])
+                result_array.append(payload_devices['result'][x]['Description'])
                 x += 1
             return result_array
         except IOError as e:
@@ -245,7 +245,7 @@ class Domoticz:
             except IOError as e:
                 LOGGER.error(str(e) + ' : ' + str(e.read()))
             while i < len(payload['result']):
-                if whr.search(payload['result'][i]['Name']):
+                if whr.search(payload['result'][i]['Description']):
                     stype = payload['result'][i]['Type']
                     typ = re.compile(stype, re.I)
                     dlevel = "100"
@@ -363,7 +363,7 @@ class Domoticz:
             if where is not None:
                 whr = re.compile(where, re.I)
                 while i < len(payload['result']):
-                    if whr.search(payload['result'][i]['Name']) and whr.search(payload['result'][i]['Name']):
+                    if whr.search(payload['result'][i]['Description']) and whr.search(payload['result'][i]['Description']):
                         break
                     elif i is len(payload['result']) - 1:
                         payload['result'][i]['Data'] = None
@@ -371,7 +371,7 @@ class Domoticz:
                     i += 1
             elif where is None:
                 while i < len(payload['result']):
-                    if wht.search(payload['result'][i]['Name']):
+                    if wht.search(payload['result'][i]['Description']):
                         break
                     elif i is len(payload['result']) - 1:
                         payload['result'][i]['Data'] = None
