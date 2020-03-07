@@ -200,7 +200,7 @@ class Domoticz:
     def get_where_names(self):
         # create array of names for scenes and devices stored in domoticz
         try:
-            LOGGER.debug("URL: " + self.url)
+            LOGGER.info("URL: " + self.url)
             f_scenes = urllib.request.urlopen(self.url + "/json.htm?type=scenes&filter=all&used=true")
             response_scenes = f_scenes.read()
             payload_scenes = json.loads(response_scenes.decode('utf-8'))
