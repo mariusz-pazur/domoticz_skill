@@ -42,8 +42,9 @@ class DomoticzSkill(MycroftSkill):
         where_keywords = self.where_intent()
         i = 0
         while i < len(where_keywords):
-            LOGGER.debug("where_keyword : " + where_keywords[i])
-            self.register_vocabulary(where_keywords[i], "DynamicWhereKeyword")
+            if where_keywords[i]:
+                LOGGER.debug("where_keyword : " + where_keywords[i])
+                self.register_vocabulary(where_keywords[i], "DynamicWhereKeyword")
             i += 1
         domoticz_switch_intent = IntentBuilder("SwitchIntent")\
             .optionally("TurnKeyword")\
@@ -345,7 +346,9 @@ class Domoticz:
             cmd = self.findcmd(state, action, dlevel)
             if cmd:
                 try:
-                    f = urllib.request.urlopen(self.url + "/json.htm?type=command&param=switch" + stype + "&idx=" + str(idx) + "&switchcmd=" + str(cmd))
+                    request_url = self.url + "/json.htm?type=command&param=switch" + stype + "&idx=" + str(idx) + "&switchcmd=" + str(cmd)
+                    LOGGER.debug("Request URL: " + request_url)
+                    f = urllib.request.urlopen(request_url)
                     response = f.read()
                     LOGGER.debug(str(response))
                     return response
