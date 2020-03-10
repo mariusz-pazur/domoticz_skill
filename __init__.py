@@ -253,8 +253,9 @@ class Domoticz:
                     stype = payload['result'][i]['Type']
                     typ = re.compile(stype, re.I)
                     is_scene = typ.search("Scene")
+                    is_group = typ.search("Group")
                     dlevel = "100"
-                    if typ.search("Group") or is_scene:
+                    if is_group or is_scene:
                         stype = "scene"
                     elif typ.search("Light/Switch"):
                         stype = "light"
@@ -270,7 +271,7 @@ class Domoticz:
                         stype = "light"
                     idx = payload['result'][i]['idx']
                     rslt = re.compile(" " + str(state).title(), re.I)
-                    if not is_scene and rslt.search(" " + payload['result'][i][result_search]):
+                    if not is_scene and not is_group and rslt.search(" " + payload['result'][i][result_search]):
                         result = 0
                     else:
                         result = 1
