@@ -277,6 +277,12 @@ class Domoticz:
                 elif i is len(payload['result']) - 1:
                     break
                 i += 1
+        LOGGER.debug("findid-idx: " + str(idx))
+        LOGGER.debug("findid-result: " + str(result))
+        LOGGER.debug("findid-stype: " + str(stype))
+        LOGGER.debug("findid-dlevel: " + str(dlevel))
+        LOGGER.debug("findid-subtype: " + str(subtype))
+        LOGGER.debug("findid-switchtype: " + str(switchtype))
         return [idx, result, stype, dlevel, subtype, switchtype]
 
     def findcmd(self, state, action, dlevel):
