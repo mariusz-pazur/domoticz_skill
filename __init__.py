@@ -49,7 +49,6 @@ class DomoticzSkill(MycroftSkill):
         domoticz_switch_intent = IntentBuilder("SwitchIntent")\
             .optionally("TurnKeyword")\
             .require("StateKeyword")\
-            .require("WhatKeyword")\
             .require("DynamicWhereKeyword").build()
         self.register_intent(domoticz_switch_intent,
                              self.handle_domoticz_switch_intent)
@@ -227,7 +226,8 @@ class Domoticz:
 
 
     def findid(self, what, where, state):
-        wht = re.compile(what, re.I)
+        if what:
+            wht = re.compile(what, re.I)
         whr = re.compile(where, re.I)
         idx = False
         stype = False
